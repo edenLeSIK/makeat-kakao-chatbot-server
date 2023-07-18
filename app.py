@@ -249,7 +249,10 @@ def today_menu():
     meals = [
         '고기 새우 아보카도 덮밥', '와사비마요 목살 덮밥', '불고기 나물 비빔밥', '치즈 바질 파스타', '스테이크 샐러드', '아보카도 새우 콩피 샐러드', '마라 건두부 볶음', '그릭요거트 볼', '이뮨킥', '단백질부스트업'
     ]
-    today_menu = random.choice(meals)
+    
+    breakfast = random.sample(meals, 2)
+    lunch = random.sample(meals, 2)
+    dinner = random.sample(meals, 2)
 
     response = {
         "version": "2.0",
@@ -257,7 +260,7 @@ def today_menu():
             "outputs": [
                 {
                     "simpleText": {
-                        "text": f"🧑🏻‍🍳 오늘의 식단\n\n🍳 아침 {breakfast_calories}kcal\n﹡{today_menu}\n\n🌞 점심 {lunch_calories}kcal\n﹡{today_menu}\n\n🍽️ 저녁 {dinner_calories}kcal\n﹡{today_menu}"
+                       "text": f"🧑🏻‍🍳 오늘의 식단\n\n\n🍳 아침 {breakfast_calories}kcal\n" + "\n".join([f"﹡{menu}" for menu in breakfast]) + f"\n\n🌞 점심 {lunch_calories}kcal\n" + "\n".join([f"﹡{menu}" for menu in lunch]) + f"\n\n🍽️ 저녁 {dinner_calories}kcal\n" + "\n".join([f"﹡{menu}" for menu in dinner])
                     }
                 }
             ],
