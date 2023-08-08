@@ -28,7 +28,6 @@ from app.menus import menus
 
 ACTIVITY_LEVEL = 1.2
 
-# 유저 정보 업데이트 관련 라우트 함수들
 @app.route("/user", methods=["POST"])
 def calculate_bmr_for_user():
     create_users_table()
@@ -37,7 +36,6 @@ def calculate_bmr_for_user():
     user_id = request_data['userRequest']['user']['id']
     params = request_data['action']['detailParams']
 
-    # Validate input data
     errors = validate_input(params)
     if errors:
         return jsonify_error_response(errors)
@@ -231,7 +229,6 @@ def goal_weight_history():
 
     return response
 
-# 식단 추천 관련 라우트 함수
 @app.route("/menu", methods=["POST"])
 def today_menu():
     user_id = request.get_json()['userRequest']['user']['id']
@@ -247,7 +244,6 @@ def today_menu():
     goal_weight = user['goal_weight']
     bmr = user['bmr']
 
-    # 목표 체중에 따라 하루 권장 칼로리 조정 (증량하려면 500kcal 더하기, 감량하려면 500kcal 빼기)
     if goal_weight > current_weight:
         total_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL) + 500
     elif goal_weight < current_weight:
@@ -267,18 +263,16 @@ def today_menu():
 
     # 아침 메뉴 추천
     breakfast.append(recommend_menu(menu_list, breakfast_calories, []))
-    # 점심 메뉴 추천 (아침 메뉴와 중복 방지)
+    # 점심 메뉴 추천
     lunch.append(recommend_menu(menu_list, lunch_calories, breakfast))
-    # 저녁 메뉴 추천 (아침과 점심 메뉴와 중복 방지)
+    # 저녁 메뉴 추천
     dinner.append(recommend_menu(menu_list, dinner_calories, breakfast + lunch))
 
-    # 응답 메시지 생성
     text = "🧑🏻‍🍳 오늘의 식단\n\n\n"
     text += f"🍳 아침 {breakfast_calories}kcal\n﹡{breakfast[0]['name']}\n\n"
     text += f"🌞 점심 {lunch_calories}kcal\n﹡{lunch[0]['name']}\n\n"
     text += f"🍽️ 저녁 {dinner_calories}kcal\n﹡{dinner[0]['name']}"
 
-    # 응답 보내기
     response = jsonify_success_response(text, [
         {
             "messageText": "오늘의 식단 다시 추천해주세요!",
@@ -289,7 +283,6 @@ def today_menu():
 
     return response
 
-# 유저 정보 확인용 라우트 함수
 @app.route("/", methods=["GET"])
 def index():
     conn = get_db_connection()
