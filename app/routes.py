@@ -24,7 +24,7 @@ from app.models import (
     get_goal_weight_history,
     get_date_in_yymmdd_format
 )
-from app.menus import menus
+from app import menus
 
 ACTIVITY_LEVEL = 1.2
 
