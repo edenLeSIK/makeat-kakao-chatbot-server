@@ -91,7 +91,7 @@ def get_user_info():
         goal_weight = user['goal_weight']
         bmr = user['bmr']
 
-        recommended_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL)
+        recommended_calories = calculate_daily_calories(bmr)
 
     response = jsonify_success_response(
         f"고객님의 정보를 알려드릴게요😃\n\n📏 키 {height}cm\n⚖️ 체중 {weight}kg\n🎯 목표 체중 {goal_weight}kg\n\n하루 권장 칼로리는 {recommended_calories}kcal입니다."
@@ -245,11 +245,11 @@ def today_menu():
     bmr = user['bmr']
 
     if goal_weight > current_weight:
-        total_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL) + 500
+        total_calories = calculate_daily_calories(bmr) + 500
     elif goal_weight < current_weight:
-        total_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL) - 500
+        total_calories = calculate_daily_calories(bmr) - 500
     else:
-        total_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL) * 1.2
+        total_calories = calculate_daily_calories(bmr)
 
     breakfast_calories = round(total_calories * 0.3)  # 아침 칼로리
     lunch_calories = round(total_calories * 0.4)  # 점심 칼로리
@@ -268,7 +268,9 @@ def today_menu():
     # 저녁 메뉴 추천
     dinner.append(recommend_menu(menu_list, dinner_calories, breakfast + lunch))
 
-    text = "🧑🏻‍🍳 오늘의 식단\n\n\n"
+    text = "🧑🏻‍🍳 오늘의 식단\n\n"
+    text += f"고객님의 현재 체중은 {current_weight}kg, 목표 체중은 {goal_weight}kg이에요!"
+    text += f"목표를 달성하기 위해 제안해드리는 하루 권장 칼로리는 {total_calories}kcal이랍니다.\n\n"
     text += f"🍳 아침 {breakfast_calories}kcal\n﹡{breakfast[0]['name']}\n\n"
     text += f"🌞 점심 {lunch_calories}kcal\n﹡{lunch[0]['name']}\n\n"
     text += f"🍽️ 저녁 {dinner_calories}kcal\n﹡{dinner[0]['name']}"

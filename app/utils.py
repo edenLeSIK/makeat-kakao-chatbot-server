@@ -7,6 +7,8 @@ BMR_CONSTANTS = {
     '여': (655, 9.56, 1.85, 4.68)
 }
 
+ACTIVITY_LEVEL = 1.2
+
 # 입력 값 유효성 검사 함수들
 def is_valid_birth_date(birth_date):
     try:
@@ -57,8 +59,8 @@ def calculate_bmr_by_gender(age, gender, height, weight):
     bmr = bmr_constants[0] + (bmr_constants[1] * weight) + (bmr_constants[2] * height) - (bmr_constants[3] * age)
     return bmr
 
-def calculate_daily_calories(bmr, activity_level):
-    return round(bmr * activity_level)
+def calculate_daily_calories(bmr):
+    return round(bmr * ACTIVITY_LEVEL)
 
 # 메뉴 추천 관련 함수들
 def get_menu_calories(menu_list):
