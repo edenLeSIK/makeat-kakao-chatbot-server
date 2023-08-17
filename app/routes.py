@@ -249,7 +249,7 @@ def today_menu():
     elif goal_weight < current_weight:
         total_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL) - 500
     else:
-        total_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL) * 1.2
+        total_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL)
 
     breakfast_calories = round(total_calories * 0.3)  # 아침 칼로리
     lunch_calories = round(total_calories * 0.4)  # 점심 칼로리
