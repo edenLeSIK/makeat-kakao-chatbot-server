@@ -91,7 +91,7 @@ def get_user_info():
         goal_weight = user['goal_weight']
         bmr = user['bmr']
 
-        recommended_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL)
+        recommended_calories = calculate_daily_calories(bmr)
 
     response = jsonify_success_response(
         f"고객님의 정보를 알려드릴게요😃\n\n📏 키 {height}cm\n⚖️ 체중 {weight}kg\n🎯 목표 체중 {goal_weight}kg\n\n하루 권장 칼로리는 {recommended_calories}kcal입니다."
@@ -245,11 +245,11 @@ def today_menu():
     bmr = user['bmr']
 
     if goal_weight > current_weight:
-        total_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL) + 500
+        total_calories = calculate_daily_calories(bmr) + 500
     elif goal_weight < current_weight:
-        total_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL) - 500
+        total_calories = calculate_daily_calories(bmr) - 500
     else:
-        total_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL)
+        total_calories = calculate_daily_calories(bmr)
 
     breakfast_calories = round(total_calories * 0.3)  # 아침 칼로리
     lunch_calories = round(total_calories * 0.4)  # 점심 칼로리
