@@ -26,8 +26,6 @@ from app.models import (
 )
 from app import menus
 
-ACTIVITY_LEVEL = 1.2
-
 @app.route("/user", methods=["POST"])
 def calculate_bmr_for_user():
     create_users_table()
@@ -52,7 +50,7 @@ def calculate_bmr_for_user():
 
     insert_or_update_user(user_id, birth_date, gender, height, weight, goal_weight, bmr, created_date)
 
-    recommended_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL)
+    recommended_calories = calculate_daily_calories(bmr)
 
     response = jsonify_success_response(
         f"🔔 입력해주신 정보를 기반으로 매일 새로운 <오늘의 식단🧑🏻‍🍳>을 추천해드릴게요!\n\n📏 키 {height}cm\n⚖️ 체중 {weight}kg\n🎯 목표 체중 {goal_weight}kg\n\n하루 권장 칼로리는 {recommended_calories}kcal입니다.\n(나이 {age}세, 성별 {gender}자 기준) \n\n(입력을 잘못했을 경우 아래의 신체 정보 수정 버튼을 눌러 다시 입력해주시길 바랍니다.)",
