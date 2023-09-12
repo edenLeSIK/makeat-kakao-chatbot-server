@@ -31,7 +31,7 @@ import json
 
 REST_API_KEY = "29682897e0e51ea9e0dc7c80d76ab18a"
 
-@app.route("/profile", methods=['POST'])
+@app.route("/user", methods=['POST'])
 def insert_user_profile():
     request_data = request.get_json()
     user_id = request_data['userRequest']['user']['id']
@@ -72,7 +72,7 @@ def insert_user_profile():
 
     return jsonify_success_response(response_text, quick_replies)
 
-@app.route("/user", methods=["POST"])
+@app.route("/physical_info", methods=["POST"])
 def calculate_bmr_for_user():
     create_users_table()
 
@@ -125,7 +125,7 @@ def calculate_bmr_for_user():
     
     return response
 
-@app.route("/update_gender", methods=["POST"])
+@app.route("/gender", methods=["POST"])
 def update_gender():
     request_data = request.get_json()
     user_id = request_data['userRequest']['user']['id']
@@ -153,7 +153,7 @@ def update_gender():
 
     return jsonify_success_response(f"성별이 {gender}로 업데이트 되었습니다.")
 
-@app.route("/update_birthdate", methods=["POST"])
+@app.route("/birthdate", methods=["POST"])
 def update_birthdate():
     request_data = request.get_json()
     user_id = request_data['userRequest']['user']['id']

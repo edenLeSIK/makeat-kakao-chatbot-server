@@ -1,13 +1,7 @@
 from flask import jsonify
 from datetime import datetime, date
 import random
-
-BMR_CONSTANTS = {
-    'male': (66, 13.75, 5, 6.8),
-    'female': (655, 9.56, 1.85, 4.68)
-}
-
-ACTIVITY_LEVEL = 1.2
+from app.constants import BMR_CONSTANTS_MALE, BMR_CONSTANTS_FEMALE, ACTIVITY_LEVEL
 
 # 입력 값 유효성 검사 함수들
 def is_valid_birthdate(birthdate):
@@ -52,7 +46,14 @@ def calculate_age(birthdate):
     return age
 
 def calculate_bmr_by_gender(age, gender, height, weight):
-    bmr_constants = BMR_CONSTANTS[gender.lower()]
+    # gender = gender.lower()  # 입력된 성별 값을 소문자로 변환
+    if gender == 'male':
+        bmr_constants = BMR_CONSTANTS_MALE
+    elif gender == 'female':
+        bmr_constants = BMR_CONSTANTS_FEMALE
+    else:
+        raise ValueError("성별 입력 실패")
+
     bmr = bmr_constants[0] + (bmr_constants[1] * weight) + (bmr_constants[2] * height) - (bmr_constants[3] * age)
     return bmr
 
