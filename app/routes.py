@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from datetime import datetime
 from app import app
 from app.utils import (
@@ -27,6 +27,7 @@ from app.models import (
 )
 from app import menus
 import requests
+import json
 
 REST_API_KEY = "29682897e0e51ea9e0dc7c80d76ab18a"
 
@@ -55,7 +56,7 @@ def insert_user_profile():
         user = cursor.fetchone()
 
         if not user:
-            cursor.execute('INSERT INTO users (user_id, name, birth_date, gender) VALUES (?, ?, ?, ?)', (user_id, name, f"{birthyear}{birthday}", gender))
+            cursor.execute('INSERT INTO users (user_id, name, birthdate, gender) VALUES (?, ?, ?, ?)', (user_id, name, f"{birthyear}{birthday}", gender))
 
     response_text = f"👋🏻 반가워요. {name}님!\n아래의 버튼을 눌러 신체 정보 설정을 이어서 진행해주세요."
     quick_replies = [
@@ -85,7 +86,7 @@ def calculate_bmr_for_user():
 
     user = get_user(user_id)
     if user:
-        birth_date = user['birth_date']
+        birthdate = user['birthdate']
         gender = user['gender']
         if gender == "female":
             gender_display = "여"
@@ -99,10 +100,10 @@ def calculate_bmr_for_user():
     goal_weight = int(params['goal_weight']['origin'])
 
     created_date = datetime.now().strftime("%Y-%m-%d")
-    age = calculate_age(birth_date)
+    age = calculate_age(birthdate)
     bmr = calculate_bmr_by_gender(age, gender, height, weight)
 
-    insert_or_update_user(user_id, birth_date, gender, height, weight, goal_weight, bmr, created_date)
+    insert_or_update_user(user_id, birthdate, gender, height, weight, goal_weight, bmr, created_date)
 
     recommended_calories = calculate_daily_calories(bmr)
 
@@ -124,6 +125,66 @@ def calculate_bmr_for_user():
     
     return response
 
+@app.route("/update_gender", methods=["POST"])
+def update_gender():
+    request_data = request.get_json()
+    user_id = request_data['userRequest']['user']['id']
+
+    gender = request_data.get("action", {}).get("params", {}).get("gender")
+    print(1, gender)
+
+    if gender in ["여", "여자"]:
+        gender = "female"
+    elif gender in ["남", "남자"]:
+        gender = "male"
+
+    if not gender:
+        return jsonify_error_response(["성별을 입력하세요."])
+
+    user = get_user(user_id)
+    if not user:
+        return jsonify_personal_information_agreement_error()
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute('UPDATE users SET gender = ? WHERE user_id = ?', (gender, user_id))
+
+    print(2, gender)
+
+    return jsonify_success_response(f"성별이 {gender}로 업데이트 되었습니다.")
+
+@app.route("/update_birthdate", methods=["POST"])
+def update_birthdate():
+    request_data = request.get_json()
+    user_id = request_data['userRequest']['user']['id']
+
+    birthdate_str = request_data.get("action", {}).get("params", {}).get("birthdate")
+    
+    if not birthdate_str:
+        return jsonify_error_response(["생년월일을 입력하세요."])
+
+    try:
+        birthdate_data = json.loads(birthdate_str)
+    except json.JSONDecodeError:
+        return jsonify_error_response(["잘못된 JSON 형식입니다."])
+
+    birthdate = birthdate_data.get("value")
+    
+    if not birthdate:
+        return jsonify_error_response(["생년월일을 입력하세요."])
+
+    birthdate = birthdate.replace("-", "")
+
+    user = get_user(user_id)
+    if not user:
+        return jsonify_personal_information_agreement_error()
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute('UPDATE users SET birthdate = ? WHERE user_id = ?', (birthdate, user_id))
+
+    return jsonify_success_response(f"생년월일이 {birthdate}로 업데이트 되었습니다.")
+
 @app.route("/info", methods=["POST"])
 def get_user_info():
     request_data = request.get_json()
@@ -139,7 +200,7 @@ def get_user_info():
         return jsonify_missing_user_error()
     else:
         name = user['name']
-        birth_date = user['birth_date']
+        birthdate = user['birthdate']
         height = user['height']
         weight = user['weight']
         goal_weight = user['goal_weight']
@@ -150,7 +211,7 @@ def get_user_info():
         elif gender == "male":
             gender_display = "남"
 
-        age = calculate_age(birth_date)
+        age = calculate_age(birthdate)
         recommended_calories = calculate_daily_calories(bmr)
 
     response = jsonify_success_response(

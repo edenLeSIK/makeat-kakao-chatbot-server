@@ -10,9 +10,9 @@ BMR_CONSTANTS = {
 ACTIVITY_LEVEL = 1.2
 
 # 입력 값 유효성 검사 함수들
-def is_valid_birth_date(birth_date):
+def is_valid_birthdate(birthdate):
     try:
-        datetime.strptime(str(birth_date), "%y%m%d")
+        datetime.strptime(str(birthdate), "%y%m%d")
         return True
     except ValueError:
         return False
@@ -40,15 +40,15 @@ def validate_input(params):
     return errors
 
 # BMR 및 칼로리 계산 함수들
-def calculate_age(birth_date):
+def calculate_age(birthdate):
     today = datetime.now().date()
     
     try:
-        birth_date = datetime.strptime(birth_date, "%Y%m%d").date()
+        birthdate = datetime.strptime(birthdate, "%Y%m%d").date()
     except ValueError:
         return None
 
-    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+    age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
     return age
 
 def calculate_bmr_by_gender(age, gender, height, weight):
