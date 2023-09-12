@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request, render_template
 from datetime import datetime
 from app import app
 from app.utils import (
@@ -10,6 +10,7 @@ from app.utils import (
     jsonify_success_response,
     jsonify_error_response,
     jsonify_missing_user_error,
+    jsonify_personal_information_agreement_error
 )
 from app.models import (
     get_db_connection,
@@ -25,8 +26,50 @@ from app.models import (
     get_date_in_yymmdd_format
 )
 from app import menus
+import requests
 
-ACTIVITY_LEVEL = 1.2
+REST_API_KEY = "29682897e0e51ea9e0dc7c80d76ab18a"
+
+@app.route("/profile", methods=['POST'])
+def insert_user_profile():
+    request_data = request.get_json()
+    user_id = request_data['userRequest']['user']['id']
+    params = request_data['action']['detailParams']
+
+    otp = params["profile"]["origin"]
+    otp_url = f"{otp}?rest_api_key={REST_API_KEY}"
+
+    otp_response = requests.get(otp_url)
+    profile_data = otp_response.json()
+
+    name = profile_data.get("nickname", "")
+    gender = profile_data.get("gender", "")
+    birthyear = profile_data.get("birthyear", "")
+    birthday = profile_data.get("birthday", "")
+
+    create_users_table()
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
+        user = cursor.fetchone()
+
+        if not user:
+            cursor.execute('INSERT INTO users (user_id, name, birth_date, gender) VALUES (?, ?, ?, ?)', (user_id, name, f"{birthyear}{birthday}", gender))
+
+    response_text = f"👋🏻 반가워요. {name}님!\n아래의 버튼을 눌러 신체 정보 설정을 이어서 진행해주세요."
+    quick_replies = [
+        {
+            "action": "block",
+            "label": "신체 정보 설정",
+            "blockId": "64abab0d0069f54fc7a3429b",
+            "extra": {
+                "": ""
+            }
+        }
+    ]
+
+    return jsonify_success_response(response_text, quick_replies)
 
 @app.route("/user", methods=["POST"])
 def calculate_bmr_for_user():
@@ -40,8 +83,17 @@ def calculate_bmr_for_user():
     if errors:
         return jsonify_error_response(errors)
 
-    birth_date = params['birth_date']['origin']
-    gender = params['gender']['origin']
+    user = get_user(user_id)
+    if user:
+        birth_date = user['birth_date']
+        gender = user['gender']
+        if gender == "female":
+            gender_display = "여"
+        elif gender == "male":
+            gender_display = "남"
+    else:
+        return jsonify_personal_information_agreement_error()
+
     height = int(params['height']['origin'])
     weight = int(params['weight']['origin'])
     goal_weight = int(params['goal_weight']['origin'])
@@ -52,10 +104,10 @@ def calculate_bmr_for_user():
 
     insert_or_update_user(user_id, birth_date, gender, height, weight, goal_weight, bmr, created_date)
 
-    recommended_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL)
+    recommended_calories = calculate_daily_calories(bmr)
 
     response = jsonify_success_response(
-        f"🔔 입력해주신 정보를 기반으로 매일 새로운 <오늘의 식단🧑🏻‍🍳>을 추천해드릴게요!\n\n📏 키 {height}cm\n⚖️ 체중 {weight}kg\n🎯 목표 체중 {goal_weight}kg\n\n하루 권장 칼로리는 {recommended_calories}kcal입니다.\n(나이 {age}세, 성별 {gender}자 기준) \n\n(입력을 잘못했을 경우 아래의 신체 정보 수정 버튼을 눌러 다시 입력해주시길 바랍니다.)",
+        f"🔔 입력해주신 정보를 기반으로 매일 새로운 <오늘의 식단🧑🏻‍🍳>을 추천해드릴게요!\n\n📏 키 {height}cm\n⚖️ 체중 {weight}kg\n🎯 목표 체중 {goal_weight}kg\n\n하루 권장 칼로리는 {recommended_calories}kcal입니다.\n(나이 {age}세, 성별 {gender_display}자 기준)",
         [
             {
                 "messageText": "신체 정보를 수정하고 싶어요.",
@@ -63,7 +115,7 @@ def calculate_bmr_for_user():
                 "label": "신체 정보 수정"
             },
             {
-                "messageText": "오늘의 식단을 추천해주세요!",
+                "messageText": "🧑🏻‍🍳 오늘의 식단을 추천해주세요!",
                 "action": "message",
                 "label": "오늘의 식단🧑🏻‍🍳"
             }
@@ -83,18 +135,26 @@ def get_user_info():
 
     user = get_user(user_id)
 
-    if not user:
+    if not user or not user['height'] or not user['weight'] or not user['goal_weight'] or not user['bmr']:
         return jsonify_missing_user_error()
     else:
+        name = user['name']
+        birth_date = user['birth_date']
         height = user['height']
         weight = user['weight']
         goal_weight = user['goal_weight']
         bmr = user['bmr']
+        gender = user["gender"]
+        if gender == "female":
+            gender_display = "여"
+        elif gender == "male":
+            gender_display = "남"
 
+        age = calculate_age(birth_date)
         recommended_calories = calculate_daily_calories(bmr)
 
     response = jsonify_success_response(
-        f"고객님의 정보를 알려드릴게요😃\n\n📏 키 {height}cm\n⚖️ 체중 {weight}kg\n🎯 목표 체중 {goal_weight}kg\n\n하루 권장 칼로리는 {recommended_calories}kcal입니다."
+        f"{name}님의 정보를 알려드릴게요😃\n\n📏 키 {height}cm\n⚖️ 체중 {weight}kg\n🎯 목표 체중 {goal_weight}kg\n\n하루 권장 칼로리는 {recommended_calories}kcal입니다.\n(나이 {age}세, 성별 {gender_display}자 기준)"
     )
 
     return response
@@ -134,7 +194,7 @@ def update_weight():
     remaining_weight_to_goal = goal_weight - weight
 
     response = jsonify_success_response(
-        f"⚖️ 체중이 {previous_weight}kg에서 {weight}kg로 수정됐어요.\n{weight_change_message}어요!\n\n⚽️ 목표까지 {remaining_weight_to_goal}kg 남았어요. 화이탱~",
+        f"⚖️ 체중이 {previous_weight}kg에서 {weight}kg로 {weight_change_message}어요!\n\n⚽️ 목표까지 {remaining_weight_to_goal}kg 남았어요. 목표 달성까지 화이탱!",
         [
             {
                 "messageText": "목표를 수정할래요!",
@@ -251,9 +311,9 @@ def today_menu():
     else:
         total_calories = calculate_daily_calories(bmr)
 
-    breakfast_calories = round(total_calories * 0.3)  # 아침 칼로리
-    lunch_calories = round(total_calories * 0.4)  # 점심 칼로리
-    dinner_calories = round(total_calories * 0.3)  # 저녁 칼로리
+    breakfast_calories = round(total_calories * 0.3)
+    lunch_calories = round(total_calories * 0.4)
+    dinner_calories = round(total_calories * 0.3)
 
     menu_list = menus.menus()
 
@@ -261,23 +321,20 @@ def today_menu():
     lunch = []
     dinner = []
 
-    # 아침 메뉴 추천
     breakfast.append(recommend_menu(menu_list, breakfast_calories, []))
-    # 점심 메뉴 추천
     lunch.append(recommend_menu(menu_list, lunch_calories, breakfast))
-    # 저녁 메뉴 추천
     dinner.append(recommend_menu(menu_list, dinner_calories, breakfast + lunch))
 
     text = "🧑🏻‍🍳 오늘의 식단\n\n"
-    text += f"고객님의 현재 체중은 {current_weight}kg, 목표 체중은 {goal_weight}kg이에요!"
-    text += f"목표를 달성하기 위해 제안해드리는 하루 권장 칼로리는 {total_calories}kcal이랍니다.\n\n"
+    text += f"고객님의 현재 체중은 {current_weight}kg, 목표 체중은 {goal_weight}kg이에요!\n"
+    text += f"목표를 달성하기 위해 제안해드리는 하루 권장 칼로리는 {total_calories}kcal랍니다.\n\n"
     text += f"🍳 아침 {breakfast_calories}kcal\n﹡{breakfast[0]['name']}\n\n"
     text += f"🌞 점심 {lunch_calories}kcal\n﹡{lunch[0]['name']}\n\n"
     text += f"🍽️ 저녁 {dinner_calories}kcal\n﹡{dinner[0]['name']}"
 
     response = jsonify_success_response(text, [
         {
-            "messageText": "오늘의 식단 다시 추천해주세요!",
+            "messageText": "🧑🏻‍🍳 오늘의 식단 다시 추천해주세요!",
             "action": "message",
             "label": "다른 식단 추천받기"
         }
@@ -291,25 +348,6 @@ def index():
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM users')
     users = cursor.fetchall()
-    users_json = []
-    for user in users:
-        user_info = {
-            "id": user['id'],
-            "user_id": user['user_id'],
-            "birth_date": user['birth_date'],
-            "gender": user['gender'],
-            "height": user['height'],
-            "weight": user['weight'],
-            "goal_weight": user['goal_weight'],
-            "bmr": user['bmr'],
-            "created_date": user['created_date']
-        }
-        users_json.append(user_info)
-
     conn.close()
 
-    response = {
-        "users": users_json
-    }
-
-    return jsonify(response)
+    return render_template('index.html', users=users)

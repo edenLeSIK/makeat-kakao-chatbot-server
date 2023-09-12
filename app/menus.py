@@ -1,5 +1,7 @@
 def menus():
     menus=  [
+        {"category":"밥", "tag": ['아침', '점심', '저녁'], "name": "소고기 미역국", "calories": 177},
+        {"category":"국", "tag": ['아침', '점심', '저녁'], "name": "소고기 미역국", "calories": 177},
         {"name": "고기 새우 아보카도 덮밥", "calories": 760},
         {"name": "와사비마요 목살 덮밥", "calories": 420},
         {"name": "불고기 나물 비빔밥", "calories": 520},

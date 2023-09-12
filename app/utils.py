@@ -3,8 +3,8 @@ from datetime import datetime, date
 import random
 
 BMR_CONSTANTS = {
-    '남': (66, 13.75, 5, 6.8),
-    '여': (655, 9.56, 1.85, 4.68)
+    'male': (66, 13.75, 5, 6.8),
+    'female': (655, 9.56, 1.85, 4.68)
 }
 
 ACTIVITY_LEVEL = 1.2
@@ -26,16 +26,10 @@ def is_valid_number(value):
 def validate_input(params):
     errors = []
 
-    birth_date = params['birth_date']['origin']
-    gender = params['gender']['origin']
     height = params['height']['origin']
     weight = params['weight']['origin']
     goal_weight = params['goal_weight']['origin']
 
-    if not is_valid_birth_date(birth_date):
-        errors.append("🔺 생년월일을 정확하게 입력해주세요. (YYMMDD 형식)")
-    if not is_valid_gender(gender):
-        errors.append("🔺 성별은 '남' 또는 '여'로 정확히 입력해주세요.")
     if not is_valid_number(height) or len(str(height)) != 3:
         errors.append("🔺 신장을 정확하게 입력해주세요.")
     if not is_valid_number(weight):
@@ -47,9 +41,12 @@ def validate_input(params):
 
 # BMR 및 칼로리 계산 함수들
 def calculate_age(birth_date):
-    today = date.today()
-    birth_date = str(birth_date)  # Convert to string
-    birth_date = datetime.strptime(birth_date, "%y%m%d").date()
+    today = datetime.now().date()
+    
+    try:
+        birth_date = datetime.strptime(birth_date, "%Y%m%d").date()
+    except ValueError:
+        return None
 
     age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
     return age
@@ -133,6 +130,33 @@ def jsonify_missing_user_error():
                     "messageText": "신체 정보를 설정할래요!",
                     "action": "message",
                     "label": "신체 정보 설정"
+                },
+                {
+                    "messageText": "종료",
+                    "action": "message",
+                    "label": "종료"
+                },
+            ]
+        }
+    }
+    return jsonify(response)
+
+def jsonify_personal_information_agreement_error():
+    response = {
+        "version": "2.0",
+        "template": {
+            "outputs": [
+                {
+                    "simpleText": {
+                        "text": "개인 정보 이용에 동의하셔야 메이킷 서비스를 이용할 수 있어요!"
+                    }
+                }
+            ],
+            "quickReplies": [
+                {
+                    "messageText": "개인 정보 이용 동의",
+                    "action": "message",
+                    "label": "개인 정보 이용 동의"
                 },
                 {
                     "messageText": "종료",

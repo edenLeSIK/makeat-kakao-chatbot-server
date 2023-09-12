@@ -1,9 +1,18 @@
+import os
 import sqlite3
 from datetime import datetime
 
 DATABASE = 'data/users.db'
 
 # 데이터베이스 관련 함수
+def initialize_database():
+    if not os.path.exists(DATABASE):
+        conn = sqlite3.connect(DATABASE)
+        conn.close()
+    create_users_table()
+    create_weight_history_table()
+    create_goal_weight_history_table()
+
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
@@ -16,7 +25,7 @@ def close_db_connection(conn):
 def create_users_table():
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, birth_date TEXT, gender TEXT, height INTEGER, weight INTEGER, goal_weight INTEGER, bmr REAL, created_date TEXT)')
+        cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, name TEXT, birth_date TEXT, gender TEXT, height INTEGER, weight INTEGER, goal_weight INTEGER, bmr REAL, created_date TEXT)')
 
 def insert_or_update_user(user_id, birth_date, gender, height, weight, goal_weight, bmr, created_date):
     with get_db_connection() as conn:
