@@ -25,18 +25,18 @@ def close_db_connection(conn):
 def create_users_table():
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, name TEXT, birth_date TEXT, gender TEXT, height INTEGER, weight INTEGER, goal_weight INTEGER, bmr REAL, created_date TEXT)')
+        cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, name TEXT, birthdate TEXT, gender TEXT, height INTEGER, weight INTEGER, goal_weight INTEGER, bmr REAL, created_date TEXT)')
 
-def insert_or_update_user(user_id, birth_date, gender, height, weight, goal_weight, bmr, created_date):
+def insert_or_update_user(user_id, birthdate, gender, height, weight, goal_weight, bmr, created_date):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
         user = cursor.fetchone()
 
         if not user:
-            cursor.execute('INSERT INTO users (user_id, birth_date, gender, height, weight, goal_weight, bmr, created_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (user_id, birth_date, gender, height, weight, goal_weight, bmr, created_date))
+            cursor.execute('INSERT INTO users (user_id, birthdate, gender, height, weight, goal_weight, bmr, created_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (user_id, birthdate, gender, height, weight, goal_weight, bmr, created_date))
         else:
-            cursor.execute('UPDATE users SET birth_date = ?, gender = ?, height = ?, weight = ?, goal_weight = ?, bmr = ?, created_date = ? WHERE user_id = ?', (birth_date, gender, height, weight, goal_weight, bmr, created_date, user_id))
+            cursor.execute('UPDATE users SET birthdate = ?, gender = ?, height = ?, weight = ?, goal_weight = ?, bmr = ?, created_date = ? WHERE user_id = ?', (birthdate, gender, height, weight, goal_weight, bmr, created_date, user_id))
 
 def get_user(user_id):
     with get_db_connection() as conn:

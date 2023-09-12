@@ -161,7 +161,7 @@ def update_birthdate():
     birthdate_str = request_data.get("action", {}).get("params", {}).get("birthdate")
     
     if not birthdate_str:
-        return jsonify_error_response(["생년월일을 입력하세요."])
+        return jsonify_error_response(["생년월일을 다시 입력하세요."])
 
     try:
         birthdate_data = json.loads(birthdate_str)
@@ -372,9 +372,9 @@ def today_menu():
     else:
         total_calories = calculate_daily_calories(bmr)
 
-    breakfast_calories = round(total_calories * 0.3)
-    lunch_calories = round(total_calories * 0.4)
-    dinner_calories = round(total_calories * 0.3)
+    breakfast_calories = round(total_calories * 0.3)  # 아침 칼로리
+    lunch_calories = round(total_calories * 0.4)  # 점심 칼로리
+    dinner_calories = round(total_calories * 0.3)  # 저녁 칼로리
 
     menu_list = menus.menus()
 
@@ -382,8 +382,11 @@ def today_menu():
     lunch = []
     dinner = []
 
+    # 아침 메뉴 추천
     breakfast.append(recommend_menu(menu_list, breakfast_calories, []))
+    # 점심 메뉴 추천
     lunch.append(recommend_menu(menu_list, lunch_calories, breakfast))
+    # 저녁 메뉴 추천
     dinner.append(recommend_menu(menu_list, dinner_calories, breakfast + lunch))
 
     text = "🧑🏻‍🍳 오늘의 식단\n\n"

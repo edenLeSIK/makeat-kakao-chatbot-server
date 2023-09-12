@@ -105,6 +105,16 @@ def jsonify_error_response(errors):
                     "label": "신체 정보 수정"
                 },
                 {
+                    "messageText": "성별을 수정하고 싶어요.",
+                    "action": "message",
+                    "label": "성별 수정"
+                },
+                {
+                    "messageText": "생년월일을 수정하고 싶어요",
+                    "action": "message",
+                    "label": "생년월일 수정"
+                },
+                {
                     "messageText": "종료할래요.",
                     "action": "message",
                     "label": "종료"
