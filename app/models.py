@@ -1,9 +1,18 @@
+import os
 import sqlite3
 from datetime import datetime
 
 DATABASE = 'data/users.db'
 
 # 데이터베이스 관련 함수
+def initialize_database():
+    if not os.path.exists(DATABASE):
+        conn = sqlite3.connect(DATABASE)
+        conn.close()
+    create_users_table()
+    create_weight_history_table()
+    create_goal_weight_history_table()
+
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row

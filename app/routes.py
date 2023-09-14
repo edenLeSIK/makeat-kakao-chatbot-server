@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request, render_template
 from datetime import datetime
 from app import app
 from app.utils import (
@@ -26,8 +26,6 @@ from app.models import (
 )
 from app import menus
 
-ACTIVITY_LEVEL = 1.2
-
 @app.route("/user", methods=["POST"])
 def calculate_bmr_for_user():
     create_users_table()
@@ -52,7 +50,7 @@ def calculate_bmr_for_user():
 
     insert_or_update_user(user_id, birth_date, gender, height, weight, goal_weight, bmr, created_date)
 
-    recommended_calories = calculate_daily_calories(bmr, ACTIVITY_LEVEL)
+    recommended_calories = calculate_daily_calories(bmr)
 
     response = jsonify_success_response(
         f"🔔 입력해주신 정보를 기반으로 매일 새로운 <오늘의 식단🧑🏻‍🍳>을 추천해드릴게요!\n\n📏 키 {height}cm\n⚖️ 체중 {weight}kg\n🎯 목표 체중 {goal_weight}kg\n\n하루 권장 칼로리는 {recommended_calories}kcal입니다.\n(나이 {age}세, 성별 {gender}자 기준) \n\n(입력을 잘못했을 경우 아래의 신체 정보 수정 버튼을 눌러 다시 입력해주시길 바랍니다.)",
@@ -270,7 +268,7 @@ def today_menu():
 
     text = "🧑🏻‍🍳 오늘의 식단\n\n"
     text += f"고객님의 현재 체중은 {current_weight}kg, 목표 체중은 {goal_weight}kg이에요!"
-    text += f"목표를 달성하기 위해 제안해드리는 하루 권장 칼로리는 {total_calories}kcal이랍니다.\n\n"
+    text += f"목표를 달성하기 위해 제안해드리는 하루 권장 칼로리는 {total_calories}kcal이랍니다.\n"
     text += f"🍳 아침 {breakfast_calories}kcal\n﹡{breakfast[0]['name']}\n\n"
     text += f"🌞 점심 {lunch_calories}kcal\n﹡{lunch[0]['name']}\n\n"
     text += f"🍽️ 저녁 {dinner_calories}kcal\n﹡{dinner[0]['name']}"
@@ -291,25 +289,6 @@ def index():
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM users')
     users = cursor.fetchall()
-    users_json = []
-    for user in users:
-        user_info = {
-            "id": user['id'],
-            "user_id": user['user_id'],
-            "birth_date": user['birth_date'],
-            "gender": user['gender'],
-            "height": user['height'],
-            "weight": user['weight'],
-            "goal_weight": user['goal_weight'],
-            "bmr": user['bmr'],
-            "created_date": user['created_date']
-        }
-        users_json.append(user_info)
-
     conn.close()
 
-    response = {
-        "users": users_json
-    }
-
-    return jsonify(response)
+    return render_template('index.html', users=users)
