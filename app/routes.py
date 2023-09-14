@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template
 from datetime import datetime
 from app import app
 from app.utils import (
