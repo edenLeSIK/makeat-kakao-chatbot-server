@@ -1,18 +1,12 @@
 from flask import jsonify
 from datetime import datetime, date
 import random
-
-BMR_CONSTANTS = {
-    '남': (66, 13.75, 5, 6.8),
-    '여': (655, 9.56, 1.85, 4.68)
-}
-
-ACTIVITY_LEVEL = 1.2
+from app.constants import BMR_CONSTANTS_MALE, BMR_CONSTANTS_FEMALE, ACTIVITY_LEVEL
 
 # 입력 값 유효성 검사 함수들
-def is_valid_birth_date(birth_date):
+def is_valid_birthdate(birthdate):
     try:
-        datetime.strptime(str(birth_date), "%y%m%d")
+        datetime.strptime(str(birthdate), "%y%m%d")
         return True
     except ValueError:
         return False
@@ -26,16 +20,10 @@ def is_valid_number(value):
 def validate_input(params):
     errors = []
 
-    birth_date = params['birth_date']['origin']
-    gender = params['gender']['origin']
     height = params['height']['origin']
     weight = params['weight']['origin']
     goal_weight = params['goal_weight']['origin']
 
-    if not is_valid_birth_date(birth_date):
-        errors.append("🔺 생년월일을 정확하게 입력해주세요. (YYMMDD 형식)")
-    if not is_valid_gender(gender):
-        errors.append("🔺 성별은 '남' 또는 '여'로 정확히 입력해주세요.")
     if not is_valid_number(height) or len(str(height)) != 3:
         errors.append("🔺 신장을 정확하게 입력해주세요.")
     if not is_valid_number(weight):
@@ -46,16 +34,26 @@ def validate_input(params):
     return errors
 
 # BMR 및 칼로리 계산 함수들
-def calculate_age(birth_date):
-    today = date.today()
-    birth_date = str(birth_date)  # Convert to string
-    birth_date = datetime.strptime(birth_date, "%y%m%d").date()
+def calculate_age(birthdate):
+    today = datetime.now().date()
+    
+    try:
+        birthdate = datetime.strptime(birthdate, "%Y%m%d").date()
+    except ValueError:
+        return None
 
-    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+    age = today.year - birthdate.year - ((today.month, today.day) < (birthdate.month, birthdate.day))
     return age
 
 def calculate_bmr_by_gender(age, gender, height, weight):
-    bmr_constants = BMR_CONSTANTS[gender.lower()]
+    # gender = gender.lower()  # 입력된 성별 값을 소문자로 변환
+    if gender == 'male':
+        bmr_constants = BMR_CONSTANTS_MALE
+    elif gender == 'female':
+        bmr_constants = BMR_CONSTANTS_FEMALE
+    else:
+        raise ValueError("성별 입력 실패")
+
     bmr = bmr_constants[0] + (bmr_constants[1] * weight) + (bmr_constants[2] * height) - (bmr_constants[3] * age)
     return bmr
 
@@ -108,6 +106,16 @@ def jsonify_error_response(errors):
                     "label": "신체 정보 수정"
                 },
                 {
+                    "messageText": "성별을 수정하고 싶어요.",
+                    "action": "message",
+                    "label": "성별 수정"
+                },
+                {
+                    "messageText": "생년월일을 수정하고 싶어요",
+                    "action": "message",
+                    "label": "생년월일 수정"
+                },
+                {
                     "messageText": "종료할래요.",
                     "action": "message",
                     "label": "종료"
@@ -133,6 +141,33 @@ def jsonify_missing_user_error():
                     "messageText": "신체 정보를 설정할래요!",
                     "action": "message",
                     "label": "신체 정보 설정"
+                },
+                {
+                    "messageText": "종료",
+                    "action": "message",
+                    "label": "종료"
+                },
+            ]
+        }
+    }
+    return jsonify(response)
+
+def jsonify_personal_information_agreement_error():
+    response = {
+        "version": "2.0",
+        "template": {
+            "outputs": [
+                {
+                    "simpleText": {
+                        "text": "개인 정보 이용에 동의하셔야 메이킷 서비스를 이용할 수 있어요!"
+                    }
+                }
+            ],
+            "quickReplies": [
+                {
+                    "messageText": "개인 정보 이용 동의",
+                    "action": "message",
+                    "label": "개인 정보 이용 동의"
                 },
                 {
                     "messageText": "종료",

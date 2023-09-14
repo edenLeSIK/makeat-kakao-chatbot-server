@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Your Flask App</title>
+    <title>Makeat Kakao Chatbot</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
@@ -9,25 +9,27 @@
     <table>
         <tr>
             <th>ID</th>
-            <th>User ID</th>
+            <th>이름</th>
             <th>Birth Date</th>
             <th>Gender</th>
             <th>Height</th>
             <th>Weight</th>
             <th>Goal Weight</th>
             <th>BMR</th>
+            <th>user id</th>
             <th>Created Date</th>
         </tr>
         {% for user in users %}
         <tr>
             <td>{{ user.id }}</td>
-            <td>{{ user.user_id }}</td>
-            <td>{{ user.birth_date }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.birthdate }}</td>
             <td>{{ user.gender }}</td>
             <td>{{ user.height }}</td>
             <td>{{ user.weight }}</td>
             <td>{{ user.goal_weight }}</td>
             <td>{{ user.bmr }}</td>
+            <td>{{ user.user_id }}</td>
             <td>{{ user.created_date }}</td>
         </tr>
         {% endfor %}
