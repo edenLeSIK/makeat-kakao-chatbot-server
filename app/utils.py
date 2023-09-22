@@ -15,7 +15,11 @@ def is_valid_gender(gender):
     return gender.lower() in ('남', '여')
 
 def is_valid_number(value):
-    return str(value).isdigit()
+    try:
+        float_value = float(value)
+        return True
+    except ValueError:
+        return False
 
 def validate_input(params):
     errors = []
@@ -24,12 +28,17 @@ def validate_input(params):
     weight = params['weight']['origin']
     goal_weight = params['goal_weight']['origin']
 
-    if not is_valid_number(height) or len(str(height)) != 3:
-        errors.append("🔺 신장을 정확하게 입력해주세요.")
+    # 키가 숫자로 변환 가능하고 100 이상인지 확인
+    if not is_valid_number(height):
+        errors.append("🔺 올바른 숫자 형식의 키를 입력해주세요.")
+    elif float(height) < 100:
+        errors.append("🔺 키를 100 이상으로 입력해주세요.")
+
+    # 몸무게와 목표 체중이 숫자로 변환 가능한지 확인
     if not is_valid_number(weight):
-        errors.append("🔺 몸무게는 숫자로만 정확하게 입력해주세요.")
+        errors.append("🔺 올바른 숫자 형식의 몸무게를 입력해주세요.")
     if not is_valid_number(goal_weight):
-        errors.append("🔺 목표 체중은 숫자로만 정확하게 입력해주세요.")
+        errors.append("🔺 올바른 숫자 형식의 목표 체중을 입력해주세요.")
 
     return errors
 
