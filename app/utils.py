@@ -79,7 +79,7 @@ def recommend_menu(menu_list, calories_target, meal_type):
         recommended_menu = random.choice(valid_menu)
         
         if recommended_menu.get('rice') == 1:
-            recommended_menu['menu'] += "과 밥"
+            recommended_menu['menu'] += " & 밥"
         
         return recommended_menu
     else:
