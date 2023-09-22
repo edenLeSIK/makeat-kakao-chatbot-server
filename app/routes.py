@@ -94,9 +94,9 @@ def calculate_bmr_for_user():
     else:
         return jsonify_personal_information_agreement_error()
 
-    height = int(params['height']['origin'])
-    weight = int(params['weight']['origin'])
-    goal_weight = int(params['goal_weight']['origin'])
+    height = float(params['height']['origin'])
+    weight = float(params['weight']['origin'])
+    goal_weight = float(params['goal_weight']['origin'])
 
     created_date = datetime.now().strftime("%Y-%m-%d")
     age = calculate_age(birthdate)
@@ -110,14 +110,24 @@ def calculate_bmr_for_user():
         f"🔔 입력해주신 정보를 기반으로 매일 새로운 <오늘의 식단🧑🏻‍🍳>을 추천해드릴게요!\n\n📏 키 {height}cm\n⚖️ 체중 {weight}kg\n🎯 목표 체중 {goal_weight}kg\n\n하루 권장 칼로리는 {recommended_calories}kcal입니다.\n(나이 {age}세, 성별 {gender_display}자 기준)",
         [
             {
-                "messageText": "신체 정보를 수정하고 싶어요.",
-                "action": "message",
-                "label": "신체 정보 수정"
-            },
-            {
                 "messageText": "🧑🏻‍🍳 오늘의 식단을 추천해주세요!",
                 "action": "message",
                 "label": "오늘의 식단🧑🏻‍🍳"
+            },
+            {
+                "messageText": "신체 정보를 수정하고 싶어요.",
+                "action": "message",
+                "label": "신체 정보 수정🧍🏻‍♀️"
+            },
+            {
+                "messageText": "성별을 수정하고 싶어요.",
+                "action": "message",
+                "label": "성별 수정🚻"
+            },
+            {
+                "messageText": "나이를 수정하고 싶어요.",
+                "action": "message",
+                "label": "생년월일 수정🗓️"
             }
         ]
     )
@@ -223,7 +233,7 @@ def get_user_info():
 def update_weight():
     request_data = request.get_json()
     user_id = request_data['userRequest']['user']['id']
-    weight = int(request_data['action']['detailParams']['weight']['origin'])
+    weight = float(request_data['action']['detailParams']['weight']['origin'])
     updated_date = datetime.now().strftime("%Y-%m-%d")
 
     create_users_table()
@@ -233,28 +243,32 @@ def update_weight():
 
     if not user:
         return jsonify_missing_user_error()
-    
+
     previous_weight = user['weight']
     weight_difference = weight - previous_weight
 
+    weight_difference_str = f"{weight_difference:.2f}"
+
     if weight_difference > 0:
-        weight_change_message = f"+{weight_difference}kg 증가했"
+        weight_change_message = f"+{weight_difference_str}kg 증가했"
     elif weight_difference < 0:
-        weight_change_message = f"-{abs(weight_difference)}kg 감소했"
+        weight_change_message = f"{weight_difference_str}kg 감소했"
     else:
         weight_change_message = "변동없"
 
     insert_weight_history(user_id, weight, updated_date)
-    
+
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute('UPDATE users SET weight = ?, created_date = ? WHERE user_id = ?', (weight, updated_date, user_id))
 
     goal_weight = user['goal_weight']
     remaining_weight_to_goal = goal_weight - weight
+    
+    remaining_weight_to_goal_str = f"{remaining_weight_to_goal:.2f}"
 
     response = jsonify_success_response(
-        f"⚖️ 체중이 {previous_weight}kg에서 {weight}kg로 {weight_change_message}어요!\n\n⚽️ 목표까지 {remaining_weight_to_goal}kg 남았어요. 목표 달성까지 화이탱!",
+        f"⚖️ 체중이 {previous_weight}kg에서 {weight}kg로 {weight_change_message}어요!\n\n⚽️ 목표까지 {remaining_weight_to_goal_str}kg 남았어요. 목표 달성까지 화이탱!",
         [
             {
                 "messageText": "목표를 수정할래요!",
@@ -275,18 +289,22 @@ def update_weight():
 def weight_history():
     request_data = request.get_json()
     user_id = request_data['userRequest']['user']['id']
-    
+
     create_weight_history_table()
     create_users_table()
 
     user = get_user(user_id)
-            
+
     if not user:
         return jsonify_missing_user_error()
 
     weight_history = get_weight_history(user_id)
     if not weight_history:
         return jsonify_success_response("체중 변경 이력이 없어요.")
+
+    weight_history.sort(key=lambda x: x['date'])
+
+    weight_history.reverse()
 
     weight_history_text = "\n".join([f"{get_date_in_yymmdd_format(history['date'])} {history['weight']}kg" for history in weight_history])
 
@@ -298,7 +316,7 @@ def weight_history():
 def update_goal_weight():
     request_data = request.get_json()
     user_id = request_data['userRequest']['user']['id']
-    goal_weight = int(request_data['action']['detailParams']['goal_weight']['origin'])
+    goal_weight = float(request_data['action']['detailParams']['goal_weight']['origin'])
     updated_date = datetime.now().strftime("%Y-%m-%d")
 
     create_users_table()
@@ -343,6 +361,14 @@ def goal_weight_history():
         return jsonify_missing_user_error()
 
     goal_weight_history = get_goal_weight_history(user_id)
+    
+    if not goal_weight_history:
+        return jsonify_success_response("목표 체중 변경 이력이 없어요.")
+
+    goal_weight_history.sort(key=lambda x: x['date'])
+
+    goal_weight_history.reverse()
+
     goal_weight_history_text = "\n".join([f"{get_date_in_yymmdd_format(history['date'])} {history['goal_weight']}kg" for history in goal_weight_history])
 
     response = jsonify_success_response(f"🎯 목표 체중 변경 히스토리 \n\n{goal_weight_history_text}")

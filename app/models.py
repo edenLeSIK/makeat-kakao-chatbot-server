@@ -27,17 +27,17 @@ def create_tables():
 def create_users_table():
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, name TEXT, birthdate TEXT, gender TEXT, height INTEGER, weight INTEGER, goal_weight INTEGER, bmr REAL, created_date TEXT)')
+        cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, name TEXT, birthdate TEXT, gender TEXT, height REAL, weight REAL, goal_weight REAL, bmr REAL, created_date TEXT)')
 
 def create_weight_history_table():
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute('CREATE TABLE IF NOT EXISTS weight_history (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, weight INTEGER, date TEXT)')
+        cursor.execute('CREATE TABLE IF NOT EXISTS weight_history (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, weight REAL, date TEXT)')
 
 def create_goal_weight_history_table():
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute('CREATE TABLE IF NOT EXISTS goal_weight_history (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, goal_weight INTEGER, date TEXT)')
+        cursor.execute('CREATE TABLE IF NOT EXISTS goal_weight_history (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, goal_weight REAL, date TEXT)')
 
 def insert_or_update_user(user_id, birthdate, gender, height, weight, goal_weight, bmr, created_date):
     with get_db_connection() as conn:
