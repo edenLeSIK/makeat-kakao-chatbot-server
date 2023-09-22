@@ -32,7 +32,7 @@ def validate_input(params):
     if not is_valid_number(height):
         errors.append("🔺 올바른 숫자 형식의 키를 입력해주세요.")
     elif float(height) < 100:
-        errors.append("🔺 키를 100 이상으로 입력해주세요.")
+        errors.append("🔺 키를 정확히 입력해주세요.")
 
     # 몸무게와 목표 체중이 숫자로 변환 가능한지 확인
     if not is_valid_number(weight):
