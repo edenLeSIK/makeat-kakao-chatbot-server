@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from datetime import datetime
 from app import app
 from app.utils import (
@@ -25,7 +25,6 @@ from app.models import (
     get_goal_weight_history,
     get_date_in_yymmdd_format
 )
-from app import menus
 import requests
 import json
 
@@ -372,29 +371,39 @@ def today_menu():
     else:
         total_calories = calculate_daily_calories(bmr)
 
-    breakfast_calories = round(total_calories * 0.3)  # 아침 칼로리
-    lunch_calories = round(total_calories * 0.4)  # 점심 칼로리
-    dinner_calories = round(total_calories * 0.3)  # 저녁 칼로리
+    # 아침, 점심, 저녁 식단의 칼로리를 설정
+    breakfast_calories = round(total_calories * 0.3)
+    lunch_calories = round(total_calories * 0.4)
+    dinner_calories = round(total_calories * 0.3)
 
-    menu_list = menus.menus()
+    # menus.json 파일을 읽어와 메뉴 데이터를 가져옴
+    with open('data/menus.json', 'r') as json_file:
+        menu_list = json.load(json_file)
 
     breakfast = []
     lunch = []
     dinner = []
 
     # 아침 메뉴 추천
-    breakfast.append(recommend_menu(menu_list, breakfast_calories, []))
+    breakfast_menu = recommend_menu(menu_list, breakfast_calories, 'breakfast')
+    breakfast.append(breakfast_menu)
+    menu_list.remove(breakfast_menu)  # 이미 선택한 아침 메뉴는 리스트에서 제거
+
     # 점심 메뉴 추천
-    lunch.append(recommend_menu(menu_list, lunch_calories, breakfast))
+    lunch_menu = recommend_menu(menu_list, lunch_calories, 'lunch')
+    lunch.append(lunch_menu)
+    menu_list.remove(lunch_menu)  # 이미 선택한 점심 메뉴는 리스트에서 제거
+
     # 저녁 메뉴 추천
-    dinner.append(recommend_menu(menu_list, dinner_calories, breakfast + lunch))
+    dinner_menu = recommend_menu(menu_list, dinner_calories, 'dinner')
+    dinner.append(dinner_menu)
 
     text = "🧑🏻‍🍳 오늘의 식단\n\n"
     text += f"고객님의 현재 체중은 {current_weight}kg, 목표 체중은 {goal_weight}kg이에요!\n"
     text += f"목표를 달성하기 위해 제안해드리는 하루 권장 칼로리는 {total_calories}kcal랍니다.\n\n"
-    text += f"🍳 아침 {breakfast_calories}kcal\n﹡{breakfast[0]['name']}\n\n"
-    text += f"🌞 점심 {lunch_calories}kcal\n﹡{lunch[0]['name']}\n\n"
-    text += f"🍽️ 저녁 {dinner_calories}kcal\n﹡{dinner[0]['name']}"
+    text += f"🍳 아침 {breakfast_calories}kcal\n﹡{breakfast[0]['menu']}\n\n"
+    text += f"🌞 점심 {lunch_calories}kcal\n﹡{lunch[0]['menu']}\n\n"
+    text += f"🍽️ 저녁 {dinner_calories}kcal\n﹡{dinner[0]['menu']}"
 
     response = jsonify_success_response(text, [
         {
