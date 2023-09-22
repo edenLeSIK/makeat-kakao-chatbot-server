@@ -64,10 +64,26 @@ def calculate_daily_calories(bmr):
 def get_menu_calories(menu_list):
     return sum(menu['calories'] for menu in menu_list)
 
-def recommend_menu(menu_list, calorie_target, current_menu):
-    available_menu_pool = [menu for menu in menu_list if menu not in current_menu]
-    recommended_menu = random.choice([menu for menu in available_menu_pool if menu['calories'] <= calorie_target])
-    return recommended_menu
+def recommend_menu(menu_list, calories_target, meal_type):
+    valid_menu = []
+
+    for menu in menu_list:
+        calorie_difference = abs(menu['total_calories'] - calories_target)
+        if calorie_difference <= 10:
+            valid_menu.append(menu)
+
+    if meal_type == 'breakfast':
+        valid_menu = [menu for menu in valid_menu if menu['breakfast'] == 1]
+
+    if valid_menu:
+        recommended_menu = random.choice(valid_menu)
+        
+        if recommended_menu.get('rice') == 1:
+            recommended_menu['menu'] += " & 밥"
+        
+        return recommended_menu
+    else:
+        return "추천 메뉴 없음"
 
 # 응답 생성 함수들
 def jsonify_success_response(text, quick_replies=None):
