@@ -376,7 +376,6 @@ def today_menu():
     lunch_calories = round(total_calories * 0.4)
     dinner_calories = round(total_calories * 0.3)
 
-    # menus.json 파일을 읽어와 메뉴 데이터를 가져옴
     with open('data/menus.json', 'r') as json_file:
         menu_list = json.load(json_file)
 
